@@ -1,0 +1,39 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dnspoller-headless
+spec:
+  clusterIP: None
+  selector:
+    app: dnspoller
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dnspoller
+spec:
+  serviceName: "dnspoller"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dnspoller
+  template:
+    metadata:
+      labels:
+        app: dnspoller
+    spec:
+      containers:
+      - name: dnspoller
+        image: quay.io/tsaarni/dnspoller:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /dnspoller
+        - dnspoller-headless
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /dnspoller.pid
+          initialDelaySeconds: 5
+          periodSeconds: 10
